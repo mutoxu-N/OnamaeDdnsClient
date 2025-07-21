@@ -1,0 +1,10 @@
+{
+    "user_id": "01234567",
+    "password": "p@s5w0rd",
+    "FQDNs": [
+        {
+            "host": "abc",
+            "domain": "example.com"
+        }
+    ]
+}
