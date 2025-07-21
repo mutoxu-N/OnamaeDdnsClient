@@ -42,6 +42,7 @@ def main():
             msg += ".\n"
 
     if not update:
+        log(f"NOT UPDATED (IP:{current_ip})")
         return
 
     # 送信
@@ -52,7 +53,6 @@ def main():
         context = ssl.create_default_context()
         with socket.create_connection(('ddnsclient.onamae.com', 65010), timeout=15) as sock, \
                 context.wrap_socket(sock, server_hostname='ddnsclient.onamae.com') as ssl_sock:
-            print(msg)
             ssl_sock.sendall(msg.encode())
 
             buffer = bytearray()
@@ -61,6 +61,9 @@ def main():
                 buffer += data
                 if not data:
                     break
+            print("--- sended ---")
+            print(msg)
+            print("--- received ---")
             print(buffer.decode())
     except:
         log(f"ERROR: {host}.{domain} {dns_ip} -> {current_ip}")
