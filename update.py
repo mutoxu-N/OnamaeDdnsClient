@@ -1,3 +1,4 @@
+from dns import resolver
 import os
 import socket
 import ssl
@@ -27,8 +28,8 @@ def main():
         host, domain = fqdn["host"], fqdn["domain"]
 
         # get dns ip
-        dns_ip = socket.gethostbyname(f"{host}.{domain}")
-        print(dns_ip)
+        dns_ip = resolver.resolve(
+            f"{host}.{domain}", "A").response.answer[0][0].address
 
         if dns_ip != current_ip:
             update = True
