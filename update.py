@@ -19,10 +19,6 @@ def main():
 
     # ログイン
     update = False
-    msg = "LOGIN\n"
-    msg += f"USERID: {config['user_id']}\n"
-    msg += f"PASSWORD: {config['password']}\n"
-    msg += ".\n"
 
     for fqdn in config["FQDNs"]:
         host, domain = fqdn["host"], fqdn["domain"]
@@ -35,38 +31,43 @@ def main():
             update = True
             log(f"UPDATE: {host}.{domain} {dns_ip} -> {current_ip}")
 
+            msg = "LOGIN\n"
+            msg += f"USERID: {config['user_id']}\n"
+            msg += f"PASSWORD: {config['password']}\n"
+            msg += ".\n"
+
             msg += "MODIP\n"
             msg += f"HOSTNAME: {host.encode('idna').decode()}\n"
             msg += f"DOMNAME: {domain.encode('idna').decode()}\n"
             msg += f"IPV4: {current_ip}\n"
             msg += ".\n"
 
+            # 送信
+            msg += "LOGOUT\n"
+            msg += ".\n"
+
+            try:
+                context = ssl.create_default_context()
+                with socket.create_connection(('ddnsclient.onamae.com', 65010), timeout=15) as sock, \
+                        context.wrap_socket(sock, server_hostname='ddnsclient.onamae.com') as ssl_sock:
+                    ssl_sock.sendall(msg.encode())
+
+                    buffer = bytearray()
+                    while True:
+                        data = ssl_sock.recv(1024)
+                        buffer += data
+                        if not data:
+                            break
+                    print("--- sended ---")
+                    print(msg)
+                    print("--- received ---")
+                    print(buffer.decode())
+            except:
+                log(f"ERROR: {host}.{domain} {dns_ip} -> {current_ip}")
+
     if not update:
         log(f"NOT UPDATED (IP:{current_ip})")
         return
-
-    # 送信
-    msg += "LOGOUT\n"
-    msg += ".\n"
-
-    try:
-        context = ssl.create_default_context()
-        with socket.create_connection(('ddnsclient.onamae.com', 65010), timeout=15) as sock, \
-                context.wrap_socket(sock, server_hostname='ddnsclient.onamae.com') as ssl_sock:
-            ssl_sock.sendall(msg.encode())
-
-            buffer = bytearray()
-            while True:
-                data = ssl_sock.recv(1024)
-                buffer += data
-                if not data:
-                    break
-            print("--- sended ---")
-            print(msg)
-            print("--- received ---")
-            print(buffer.decode())
-    except:
-        log(f"ERROR: {host}.{domain} {dns_ip} -> {current_ip}")
 
 
 if __name__ == "__main__":
